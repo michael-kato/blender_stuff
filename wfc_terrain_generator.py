@@ -75,7 +75,7 @@ def update_viewport():
     bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1)
     
     # Give Blender time to process the redraw
-    time.sleep(0.1)
+    time.sleep(0.01)
 
 
 # Wave Function Collapse implementation
@@ -88,6 +88,7 @@ class WaveFunctionCollapse:
         self.grid = np.zeros((grid_size, grid_size), dtype=object)
         self.terrain_collection = None
         self.placed_objects = []
+        self.materials = {}
         
         # Initialize all cells with all possibilities
         for x in range(grid_size):
@@ -96,11 +97,11 @@ class WaveFunctionCollapse:
         
         # Create terrain module templates
         for terrain_type in TERRAIN_TYPES:
-            self.terrain_templates[terrain_type] = create_terrain_template(terrain_type)
+            self.terrain_templates[terrain_type] = self.create_terrain_template(terrain_type)
             
         # Create environmental object templates
         for obj_type in OBJECT_TYPES.keys():
-            self.env_templates[obj_type] = create_object_template(obj_type)
+            self.env_templates[obj_type] = self.create_object_template(obj_type)
 
         # Create a collection for our generated terrain
         self.terrain_collection = bpy.data.collections.new("Generated_Terrain")
@@ -289,8 +290,7 @@ class WaveFunctionCollapse:
                                 obj_type, 
                                 x + offset_x, 
                                 y + offset_y, 
-                                terrain_type, 
-                                self.env_templates
+                                terrain_type
                             )
                             
                             env_objects_data.append({
@@ -334,108 +334,111 @@ class WaveFunctionCollapse:
         self.placed_objects.append(env_obj)
 
 
-"""
-TODO WILL REPLACE THESE WITH ACTUAL MESH
-"""
-# Create placeholder modules (simple cubes with different colors)
-def create_terrain_template(terrain_type, size=1.0):
-    print(f"Creating terrain module: {terrain_type}")
-    try:
-        # Create a cube
-        bpy.ops.mesh.primitive_cube_add(size=size)
-        module = bpy.context.active_object
-        module.name = f"Module_{terrain_type}"
-        print(f"Successfully created module: {module.name}")
-    except Exception as e:
-        print(f"Error creating terrain module {terrain_type}: {e}")
-        return None
-    
-    # Assign different colors based on terrain type
-    mat = bpy.data.materials.new(name=f"Material_{terrain_type}")
-    mat.use_nodes = True
-    
-    # Set color based on terrain type
-    if terrain_type == "mountain_peak":
-        color = (0.8, 0.8, 0.8, 1)  # Light grey
-        module.scale.z = HEIGHT_VALUES[terrain_type]
-    elif terrain_type == "slope":
-        color = (0.5, 0.4, 0.3, 1)  # Brown
-        module.scale.z = HEIGHT_VALUES[terrain_type]
-    elif terrain_type == "plateau":
-        color = (0.3, 0.5, 0.3, 1)  # Green
-        module.scale.z = HEIGHT_VALUES[terrain_type]
-    elif terrain_type == "valley_floor":
-        color = (0.2, 0.6, 0.2, 1)  # Darker green
-        module.scale.z = HEIGHT_VALUES[terrain_type]
-    elif terrain_type == "riverbed":
-        color = (0.1, 0.3, 0.8, 1)  # Blue
-        module.scale.z = HEIGHT_VALUES[terrain_type]
-    elif terrain_type == "shoreline":
-        color = (0.8, 0.7, 0.5, 1)  # Sand color
-        module.scale.z = HEIGHT_VALUES[terrain_type]
-    
-    mat.node_tree.nodes["Principled BSDF"].inputs[0].default_value = color
-    
-    if module.data.materials:
-        module.data.materials[0] = mat
-    else:
-        module.data.materials.append(mat)
+    """
+    TODO WILL REPLACE THESE WITH ACTUAL MESH
+    """
+    # Create placeholder modules (simple cubes with different colors)
+    def create_terrain_template(self, terrain_type, size=1.0):
+        print(f"Creating terrain module: {terrain_type}")
+        try:
+            # Create a cube
+            bpy.ops.mesh.primitive_cube_add(size=size)
+            module = bpy.context.active_object
+            module.name = f"Module_{terrain_type}"
+            print(f"Successfully created module: {module.name}")
+        except Exception as e:
+            print(f"Error creating terrain module {terrain_type}: {e}")
+            return None
         
-    return module
+        # Assign different colors based on terrain type
+        if terrain_type in self.materials:
+            mat = self.materials[terrain_type]
+        else:
+            mat = bpy.data.materials.new(name=f"Material_{terrain_type}")
+            mat.use_nodes = True
+            
+            # Set color based on terrain type
+            if terrain_type == "mountain_peak":
+                color = (0.8, 0.8, 0.8, 1)  # Light grey
+                module.scale.z = HEIGHT_VALUES[terrain_type]
+            elif terrain_type == "slope":
+                color = (0.5, 0.4, 0.3, 1)  # Brown
+                module.scale.z = HEIGHT_VALUES[terrain_type]
+            elif terrain_type == "plateau":
+                color = (0.3, 0.5, 0.3, 1)  # Green
+                module.scale.z = HEIGHT_VALUES[terrain_type]
+            elif terrain_type == "valley_floor":
+                color = (0.2, 0.6, 0.2, 1)  # Darker green
+                module.scale.z = HEIGHT_VALUES[terrain_type]
+            elif terrain_type == "riverbed":
+                color = (0.1, 0.3, 0.8, 1)  # Blue
+                module.scale.z = HEIGHT_VALUES[terrain_type]
+            elif terrain_type == "shoreline":
+                color = (0.8, 0.7, 0.5, 1)  # Sand color
+                module.scale.z = HEIGHT_VALUES[terrain_type]
+            
+            mat.node_tree.nodes["Principled BSDF"].inputs[0].default_value = color
+        
+        if module.data.materials:
+            module.data.materials[0] = mat
+        else:
+            module.data.materials.append(mat)
+            
+        return module
 
-def create_object_template(obj_type):
-    # Create environmental objects
-    if obj_type == "house":
-        bpy.ops.mesh.primitive_cube_add(size=OBJECT_TYPES[obj_type]["size"])
-        obj = bpy.context.active_object
-        obj.scale.z = 0.8  # Adjust height
-    elif obj_type == "tree":
-        # Simple tree - cube base with cone top
-        bpy.ops.mesh.primitive_cylinder_add(radius=0.1, depth=0.4)
-        trunk = bpy.context.active_object
-        trunk.location.z = 0.2
+    def create_object_template(self, obj_type):
+        # Create environmental objects
+        if obj_type == "house":
+            bpy.ops.mesh.primitive_cube_add(size=OBJECT_TYPES[obj_type]["size"])
+            obj = bpy.context.active_object
+            obj.scale.z = 0.8  # Adjust height
+        elif obj_type == "tree":
+            # Simple tree - cube base with cone top
+            bpy.ops.mesh.primitive_cylinder_add(radius=0.1, depth=0.4)
+            trunk = bpy.context.active_object
+            trunk.location.z = 0.2
+            
+            bpy.ops.mesh.primitive_cone_add(radius1=0.3, depth=0.6)
+            leaves = bpy.context.active_object
+            leaves.location.z = 0.6
+            
+            # Join the objects
+            bpy.ops.object.select_all(action='DESELECT')
+            trunk.select_set(True)
+            leaves.select_set(True)
+            bpy.context.view_layer.objects.active = trunk
+            bpy.ops.object.join()
+            
+            obj = trunk
+        elif obj_type == "rock":
+            bpy.ops.mesh.primitive_ico_sphere_add(radius=OBJECT_TYPES[obj_type]["size"])
+            obj = bpy.context.active_object
+            
+        obj.name = f"Env_{obj_type}"
         
-        bpy.ops.mesh.primitive_cone_add(radius1=0.3, depth=0.6)
-        leaves = bpy.context.active_object
-        leaves.location.z = 0.6
+        # Create and assign material
+        mat = bpy.data.materials.new(name=f"Material_{obj_type}")
+        mat.use_nodes = True
         
-        # Join the objects
-        bpy.ops.object.select_all(action='DESELECT')
-        trunk.select_set(True)
-        leaves.select_set(True)
-        bpy.context.view_layer.objects.active = trunk
-        bpy.ops.object.join()
+        if obj_type == "house":
+            color = (0.8, 0.2, 0.2, 1)  # Red
+        elif obj_type == "tree":
+            color = (0.0, 0.4, 0.0, 1)  # Dark green
+        elif obj_type == "rock":
+            color = (0.5, 0.5, 0.5, 1)  # Grey
+            
+        mat.node_tree.nodes["Principled BSDF"].inputs[0].default_value = color
         
-        obj = trunk
-    elif obj_type == "rock":
-        bpy.ops.mesh.primitive_ico_sphere_add(radius=OBJECT_TYPES[obj_type]["size"])
-        obj = bpy.context.active_object
+        if obj.data.materials:
+            obj.data.materials[0] = mat
+        else:
+            obj.data.materials.append(mat)
+            
+        # Hide the object from view (it will be used as a template)
+        obj.hide_viewport = True
+        obj.hide_render = True
         
-    obj.name = f"Env_{obj_type}"
-    
-    # Create and assign material
-    mat = bpy.data.materials.new(name=f"Material_{obj_type}")
-    mat.use_nodes = True
-    
-    if obj_type == "house":
-        color = (0.8, 0.2, 0.2, 1)  # Red
-    elif obj_type == "tree":
-        color = (0.0, 0.4, 0.0, 1)  # Dark green
-    elif obj_type == "rock":
-        color = (0.5, 0.5, 0.5, 1)  # Grey
-        
-    mat.node_tree.nodes["Principled BSDF"].inputs[0].default_value = color
-    
-    if obj.data.materials:
-        obj.data.materials[0] = mat
-    else:
-        obj.data.materials.append(mat)
-        
-    # Hide the object from view (it will be used as a template)
-    obj.hide_viewport = True
-    obj.hide_render = True
-    
-    return obj
+        return obj
 
 # UI Panel class
 class WFC_PT_TerrainGenerator(bpy.types.Panel):
@@ -506,26 +509,20 @@ def unregister():
     del bpy.types.Scene.wfc_cell_size
 
 # Execute standalone without registering as addon
-try:
-    print("Attempting to execute as standalone script...")
-    # Run directly instead of registering as addon
-    register_properties()
-    print("Properties registered successfully")
-    
-    # Execute terrain generation with default parameters
-    print("Generating terrain with default parameters...")
-    # Run WFC algorithm
-    print("Running Wave Function Collapse algorithm...")
-    wfc = WaveFunctionCollapse(grid_size=20)
-    terrain_grid = wfc.run()
-    print("WFC algorithm completed successfully")
+print("Attempting to execute as standalone script...")
+# Run directly instead of registering as addon
+register_properties()
+print("Properties registered successfully")
 
-except Exception as e:
-    print(f"Error executing script: {e}")
-    import traceback
-    traceback.print_exc()
+# Execute terrain generation with default parameters
+print("Generating terrain with default parameters...")
+# Run WFC algorithm
+print("Running Wave Function Collapse algorithm...")
+wfc = WaveFunctionCollapse(grid_size=10)
+wfc.run()
+print("WFC algorithm completed successfully")
 
-print("===== WFC TERRAIN GENERATOR EXECUTION COMPLETE =====")
+
 
 # Uncomment to register as addon:
 # try:
