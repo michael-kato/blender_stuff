@@ -4,17 +4,7 @@ import random
 import numpy as np
 from bpy.props import IntProperty, FloatProperty
 
-print("===== WFC TERRAIN GENERATOR =====")
-print("Starting script execution...")
 
-try:
-    # Clear existing objects
-    print("Clearing existing objects...")
-    bpy.ops.object.select_all(action='SELECT')
-    bpy.ops.object.delete(confirm=False)
-    print("Objects cleared successfully")
-except Exception as e:
-    print(f"Error clearing objects: {e}")
 
 # Terrain module definitions
 TERRAIN_TYPES = [
