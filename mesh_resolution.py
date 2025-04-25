@@ -30,9 +30,9 @@ class MESH_OT_AdjustResolution(bpy.types.Operator):
         unit='LENGTH'
     )
     
-    prepare_for_baking: BoolProperty(
-        name="Optimize for Baking",
-        description="Prepare mesh for vertex lighting baking",
+    debug_mode: BoolProperty(
+        name="Debug Mode",
+        description="Stop after a single iteration",
         default=True
     )
 
@@ -49,7 +49,7 @@ class MESH_OT_AdjustResolution(bpy.types.Operator):
         
         # Get method from scene settings
         self.target_tri_size = context.scene.mesh_res_target_size
-        self.prepare_for_baking = context.scene.mesh_res_optimize_baking
+        self.debug_mode = context.scene.debug_mode
         
         # Start timing for performance measurement
         start_time = time.time()
@@ -61,10 +61,6 @@ class MESH_OT_AdjustResolution(bpy.types.Operator):
         
         # Apply subdivision
         self.apply_subdivision(obj)
-        
-        # Optimize the mesh if needed
-        if self.prepare_for_baking:
-            self.optimize_for_baking(obj)
         
         # Calculate elapsed time
         elapsed_time = time.time() - start_time
@@ -93,7 +89,7 @@ class MESH_OT_AdjustResolution(bpy.types.Operator):
         # Update mesh
         obj.data.update()
     
-    def delaunay_adaptive_tessellation(self, bm, target_face_area, max_iterations=10, preserve_boundaries=True):
+    def delaunay_adaptive_tessellation(self, bm, target_face_area, max_iterations=10):
         """
         Performs adaptive tessellation on an existing mesh using Delaunay criteria.
         
@@ -105,30 +101,24 @@ class MESH_OT_AdjustResolution(bpy.types.Operator):
             bm (bmesh.types.BMesh): The BMesh to tessellate
             target_face_area (float): Target maximum face area in square blender units
             max_iterations (int): Maximum subdivision iterations to prevent infinite loops
-            preserve_boundaries (bool): Whether to preserve boundary edges
             
         Returns:
             None
         """
         
         # Ensure lookup tables are fresh
-        bm.faces.ensure_lookup_table()
-        bm.edges.ensure_lookup_table()
-        bm.verts.ensure_lookup_table()
+        self.ensure_lookup_tables(bm)
         
         # Use Delaunay triangulation via BMesh operator
-        bmesh.ops.triangulate(bm, quad_method='BEAUTY', ngon_method='BEAUTY')
+        bmesh.ops.triangulate(bm, faces=bm.faces, quad_method='FIXED', ngon_method='BEAUTY')
         
         # Update our lookup tables after topology changes
-        bm.faces.ensure_lookup_table()
-        bm.edges.ensure_lookup_table()
-        bm.verts.ensure_lookup_table()
+        self.ensure_lookup_tables(bm)
         
-        # Step 2: Iterative subdivision until target face area is achieved
         for _ in range(max_iterations):
             # Identify large faces that need subdivision
             large_faces = [f for f in bm.faces if f.calc_area() > target_face_area]
-            divided_faces = set()
+            triangulate_us = set()
             
             # If no large faces remain, we're done
             if not large_faces:
@@ -136,21 +126,16 @@ class MESH_OT_AdjustResolution(bpy.types.Operator):
                 
             # Identify edges to subdivide
             edges_to_subdivide = []
-            seen_edges = set()  # Track edges we've already marked for subdivision
+            seen_edges = set()
             
             for face in large_faces:
-                # For each large face, find its longest edge
                 longest_edge = None
                 max_length = 0
                 
                 for edge in face.edges:
-                    # Skip boundary edges if specified
-                    if preserve_boundaries and edge.is_boundary:
-                        continue
-                        
-                    # Skip edges we've already decided to subdivide, but save the face
+                    # Skip edges we've already marked for subdivision, but save the face
                     if edge.index in seen_edges:
-                        divided_faces.add(face)
+                        triangulate_us.add(face)
                         continue
                         
                     length = edge.calc_length()
@@ -158,45 +143,37 @@ class MESH_OT_AdjustResolution(bpy.types.Operator):
                         max_length = length
                         longest_edge = edge
                 
-                # Add the longest edge to our subdivision list
                 if longest_edge and longest_edge.index not in seen_edges:
                     edges_to_subdivide.append(longest_edge)
                     seen_edges.add(longest_edge.index)
-                    divided_faces.add(face)
+                    triangulate_us.add(face)
             
-            # If no edges to subdivide (could happen if all are boundaries), break
             if not edges_to_subdivide:
                 break
                 
-            # Subdivide the selected edges (one cut per edge)
-            bmesh.ops.subdivide_edges(bm, edges=edges_to_subdivide, cuts=1, use_single_edge =True)
-            bmesh.ops.triangulate(bm, faces=list(divided_faces), quad_method='BEAUTY', ngon_method='BEAUTY')
+            bmesh.ops.subdivide_edges(bm, edges=edges_to_subdivide, cuts=1, use_single_edge=True)
+            bmesh.ops.triangulate(bm, faces=list(triangulate_us), quad_method='BEAUTY', ngon_method='BEAUTY')
 
-            # Update our topology after modifications
-            bm.faces.ensure_lookup_table()
-            bm.edges.ensure_lookup_table()
-            bm.verts.ensure_lookup_table()
+            self.ensure_lookup_tables(bm)
 
+            # stop after one iteration
+            if self.debug_mode:
+                return
     
-    def optimize_for_baking(self, obj):
-        """Prepare mesh for vertex lighting/baking"""
-        # Add custom data layers for vertex lighting if they don't exist
+    def prepare_for_baking(self, obj):
         mesh = obj.data
         
-        # Add vertex colors if needed for baking
         if not mesh.vertex_colors:
             mesh.vertex_colors.new(name="BakedLighting")
         
-        # Add UVs if needed for baking
         if not mesh.uv_layers:
             mesh.uv_layers.new(name="LightmapUVs")
-            
-            # We could unwrap here if needed
-            # bpy.ops.object.mode_set(mode='EDIT')
-            # bpy.ops.mesh.select_all(action='SELECT')
-            # bpy.ops.uv.smart_project()
-            # bpy.ops.object.mode_set(mode='OBJECT')
 
+    def ensure_lookup_tables(self, bm):
+        # pretty annoying
+        bm.faces.ensure_lookup_table()
+        bm.edges.ensure_lookup_table()
+        bm.verts.ensure_lookup_table()
 
 class VIEW3D_PT_MeshResolutionPanel(bpy.types.Panel):
     """Panel for Mesh Resolution Tool"""
@@ -220,7 +197,7 @@ class VIEW3D_PT_MeshResolutionPanel(bpy.types.Panel):
         col.prop(context.scene, "mesh_res_target_size", text="Target Size")
         
         row = box.row()
-        row.prop(context.scene, "mesh_res_optimize_baking")
+        row.prop(context.scene, "debug_mode", text="Stop after single iteration")
             
         # Analysis button
         layout.operator("mesh.analyze_resolution")
@@ -247,16 +224,16 @@ def add_mesh_resolution_props():
         unit='LENGTH'
     )
     
-    bpy.types.Scene.mesh_res_optimize_baking = BoolProperty(
-        name="Optimize for Baking",
-        description="Prepare mesh for vertex lighting baking",
+    bpy.types.Scene.debug_mode = BoolProperty(
+        name="Debug Mode",
+        description="Stop after a single iteration",
         default=True
     )
     
 def remove_mesh_resolution_props():
     """Remove custom properties"""
     del bpy.types.Scene.mesh_res_target_size
-    del bpy.types.Scene.mesh_res_optimize_baking
+    del bpy.types.Scene.debug_mode
 
 
 # Calculate actual mesh metrics for analysis
