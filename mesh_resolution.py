@@ -1,10 +1,9 @@
 import bpy
 import bmesh
-import mathutils
-import math
 import time
-import random
-from bpy.props import FloatProperty, IntProperty, BoolProperty, EnumProperty
+import math
+import mathutils
+from bpy.props import FloatProperty, BoolProperty
 
 
 # Force Blender to update the viewport
@@ -80,7 +79,8 @@ class MESH_OT_AdjustResolution(bpy.types.Operator):
         bm = bmesh.new()
         bm.from_mesh(obj.data)
         
-        self.delaunay_adaptive_tessellation(bm, self.target_tri_size)
+        # if option:
+        self.edge_divide(bm, self.target_tri_size)
             
         # Update the mesh
         bm.to_mesh(obj.data)
@@ -89,35 +89,76 @@ class MESH_OT_AdjustResolution(bpy.types.Operator):
         # Update mesh
         obj.data.update()
     
-    def delaunay_adaptive_tessellation(self, bm, target_face_area, max_iterations=10):
+    def edge_divide(self, bm, target_edge_length):
         """
-        Performs adaptive tessellation on an existing mesh using Delaunay criteria.
-        
+
         This function preserves the original mesh topology and attributes (UVs, normals, etc.)
-        while ensuring convex triangulation. It works by first triangulating all non-triangular
-        faces using Delaunay criteria, then subdividing edges until the target face area is reached.
+        while ensuring convex triangulation.
         
         Args:
             bm (bmesh.types.BMesh): The BMesh to tessellate
-            target_face_area (float): Target maximum face area in square blender units
-            max_iterations (int): Maximum subdivision iterations to prevent infinite loops
+            target_edge_length (float): Target maximum face area in square blender units
             
         Returns:
             None
         """
         
-        # Ensure lookup tables are fresh
-        self.ensure_lookup_tables(bm)
+        while True:
+            # first subdivide long edges to ensure we have a good starting point
+            min_co = mathutils.Vector((float('inf'), float('inf'), float('inf')))
+            max_co = mathutils.Vector((float('-inf'), float('-inf'), float('-inf')))
+
+            for v in bm.verts:
+                for i in range(3):
+                    min_co[i] = min(min_co[i], v.co[i])
+                    max_co[i] = max(max_co[i], v.co[i])
+                    
+            dimensions = max_co - min_co
+            radius = math.sqrt(dimensions[0]**2 + dimensions[1]**2 + dimensions[2]**2) / 2
+            print(radius, target_edge_length)
+            long_edges = []
+            for e in bm.edges:
+                if e.calc_length() > target_edge_length:
+                    long_edges.append(e)
+
+            try:
+                # Ensure lookup tables are fresh
+                self.ensure_lookup_tables(bm)
+                result = bmesh.ops.subdivide_edges(bm, edges=long_edges, cuts=1, use_single_edge=True)
+                new_verts = [v for v in result['geom_inner'] if isinstance(v, bmesh.types.BMVert)]
+                
+                if new_verts:
+                    bmesh.ops.triangulate(bm, faces=bm.faces, quad_method='BEAUTY', ngon_method='BEAUTY')
+                else:
+                    # If no new vertices were created, we're stuck in a loop - exit    
+                    break
+            finally:
+                # Update our lookup tables after topology changes
+                self.ensure_lookup_tables(bm)
+
+            # stop after one iteration
+            if self.debug_mode:
+                return
+
+
+    def face_divide(self, bm, target_face_area, max_iterations=10):
+        """
+
+        This function preserves the original mesh topology and attributes (UVs, normals, etc.)
+        while ensuring convex triangulation.
         
-        # Use Delaunay triangulation via BMesh operator
-        bmesh.ops.triangulate(bm, faces=bm.faces, quad_method='FIXED', ngon_method='BEAUTY')
-        
-        # Update our lookup tables after topology changes
-        self.ensure_lookup_tables(bm)
-        
+        Args:
+            bm (bmesh.types.BMesh): The BMesh to tessellate
+            target_face_area (float): Target maximum face area in square blender units
+            
+        Returns:
+            None
+        """
+    
         for _ in range(max_iterations):
             # Identify large faces that need subdivision
             large_faces = [f for f in bm.faces if f.calc_area() > target_face_area]
+
             triangulate_us = set()
             
             # If no large faces remain, we're done
@@ -151,14 +192,19 @@ class MESH_OT_AdjustResolution(bpy.types.Operator):
             if not edges_to_subdivide:
                 break
                 
-            bmesh.ops.subdivide_edges(bm, edges=edges_to_subdivide, cuts=1, use_single_edge=True)
-            bmesh.ops.triangulate(bm, faces=list(triangulate_us), quad_method='BEAUTY', ngon_method='BEAUTY')
-
-            self.ensure_lookup_tables(bm)
+            result = bmesh.ops.subdivide_edges(bm, edges=edges_to_subdivide, cuts=1, use_single_edge=True)
+            new_verts = [v for v in result['geom_inner'] if isinstance(v, bmesh.types.BMVert)]
+            # If no new vertices were created, then there's no need to continue
+            if not new_verts:
+                break
+            else:
+                bmesh.ops.triangulate(bm, faces=list(triangulate_us), quad_method='BEAUTY', ngon_method='BEAUTY')
+                self.ensure_lookup_tables(bm)
 
             # stop after one iteration
             if self.debug_mode:
                 return
+    
     
     def prepare_for_baking(self, obj):
         mesh = obj.data
@@ -210,7 +256,6 @@ class VIEW3D_PT_MeshResolutionPanel(bpy.types.Panel):
             col = box.column(align=True)
             col.label(text=f"Triangles: {context.scene.mesh_analysis_tri_count}")
             col.label(text=f"Avg Size: {context.scene.mesh_analysis_avg_size:.3f}")
-            col.label(text=f"Size Range: {context.scene.mesh_analysis_min_size:.3f} - {context.scene.mesh_analysis_max_size:.3f}")
 
 
 def add_mesh_resolution_props():
