@@ -1,0 +1,177 @@
+{
+  "Mesh_X_+Y_+Z": {
+    "position": [
+      0,
+      1,
+      1
+    ]
+  },
+  "Mesh_X_+Y_-Z": {
+    "position": [
+      0,
+      1,
+      -1
+    ]
+  },
+  "Mesh_X_-Y_-Z": {
+    "position": [
+      0,
+      -1,
+      -1
+    ]
+  },
+  "Mesh_-X_Y_+Z": {
+    "position": [
+      -1,
+      0,
+      1
+    ]
+  },
+  "Mesh_-X_Y_-Z": {
+    "position": [
+      -1,
+      0,
+      -1
+    ]
+  },
+  "Mesh_+X_Y_Z": {
+    "position": [
+      1,
+      0,
+      0
+    ]
+  },
+  "Mesh_-X_Y_Z": {
+    "position": [
+      -1,
+      0,
+      0
+    ]
+  },
+  "Mesh_X_+Y_Z": {
+    "position": [
+      0,
+      1,
+      0
+    ]
+  },
+  "Mesh_-X_-Y_-Z": {
+    "position": [
+      -1,
+      -1,
+      -1
+    ]
+  },
+  "Mesh_+X_+Y_+Z": {
+    "position": [
+      1,
+      1,
+      1
+    ]
+  },
+  "Mesh_+X_+Y_-Z": {
+    "position": [
+      1,
+      1,
+      -1
+    ]
+  },
+  "Mesh_-X_+Y_Z": {
+    "position": [
+      -1,
+      1,
+      0
+    ]
+  },
+  "Mesh_-X_+Y_-Z": {
+    "position": [
+      -1,
+      1,
+      -1
+    ]
+  },
+  "Mesh_-X_+Y_+Z": {
+    "position": [
+      -1,
+      1,
+      1
+    ]
+  },
+  "Mesh_+X_+Y_Z": {
+    "position": [
+      1,
+      1,
+      0
+    ]
+  },
+  "Mesh_X_Y_+Z": {
+    "position": [
+      0,
+      0,
+      1
+    ]
+  },
+  "Mesh_+X_Y_-Z": {
+    "position": [
+      1,
+      0,
+      -1
+    ]
+  },
+  "Mesh_+X_-Y_+Z": {
+    "position": [
+      1,
+      -1,
+      1
+    ]
+  },
+  "Mesh_+X_Y_+Z": {
+    "position": [
+      1,
+      0,
+      1
+    ]
+  },
+  "Mesh_-X_-Y_+Z": {
+    "position": [
+      -1,
+      -1,
+      1
+    ]
+  },
+  "Mesh_X_-Y_+Z": {
+    "position": [
+      0,
+      -1,
+      1
+    ]
+  },
+  "Mesh_X_-Y_Z": {
+    "position": [
+      0,
+      -1,
+      0
+    ]
+  },
+  "Mesh_-X_-Y_Z": {
+    "position": [
+      -1,
+      -1,
+      0
+    ]
+  },
+  "Mesh_+X_-Y_-Z": {
+    "position": [
+      1,
+      -1,
+      -1
+    ]
+  },
+  "Mesh_+X_-Y_Z": {
+    "position": [
+      1,
+      -1,
+      0
+    ]
+  }
+}

@@ -1,0 +1,140 @@
+{
+  "Mesh_X_+Y_+Z": [
+    "Mesh_X_+Y_Z",
+    "Mesh_+X_+Y_+Z",
+    "Mesh_-X_+Y_+Z",
+    "Mesh_X_Y_+Z"
+  ],
+  "Mesh_X_+Y_-Z": [
+    "Mesh_X_+Y_Z",
+    "Mesh_+X_+Y_-Z",
+    "Mesh_-X_+Y_-Z"
+  ],
+  "Mesh_X_-Y_-Z": [
+    "Mesh_-X_-Y_-Z",
+    "Mesh_X_-Y_Z",
+    "Mesh_+X_-Y_-Z"
+  ],
+  "Mesh_-X_Y_+Z": [
+    "Mesh_-X_Y_Z",
+    "Mesh_-X_+Y_+Z",
+    "Mesh_X_Y_+Z",
+    "Mesh_-X_-Y_+Z"
+  ],
+  "Mesh_-X_Y_-Z": [
+    "Mesh_-X_Y_Z",
+    "Mesh_-X_-Y_-Z",
+    "Mesh_-X_+Y_-Z"
+  ],
+  "Mesh_+X_Y_Z": [
+    "Mesh_+X_+Y_Z",
+    "Mesh_+X_Y_-Z",
+    "Mesh_+X_Y_+Z",
+    "Mesh_+X_-Y_Z"
+  ],
+  "Mesh_-X_Y_Z": [
+    "Mesh_-X_Y_+Z",
+    "Mesh_-X_Y_-Z",
+    "Mesh_-X_+Y_Z",
+    "Mesh_-X_-Y_Z"
+  ],
+  "Mesh_X_+Y_Z": [
+    "Mesh_X_+Y_+Z",
+    "Mesh_X_+Y_-Z",
+    "Mesh_-X_+Y_Z",
+    "Mesh_+X_+Y_Z"
+  ],
+  "Mesh_-X_-Y_-Z": [
+    "Mesh_X_-Y_-Z",
+    "Mesh_-X_Y_-Z",
+    "Mesh_-X_-Y_Z"
+  ],
+  "Mesh_+X_+Y_+Z": [
+    "Mesh_X_+Y_+Z",
+    "Mesh_+X_+Y_Z",
+    "Mesh_+X_Y_+Z"
+  ],
+  "Mesh_+X_+Y_-Z": [
+    "Mesh_X_+Y_-Z",
+    "Mesh_+X_+Y_Z",
+    "Mesh_+X_Y_-Z"
+  ],
+  "Mesh_-X_+Y_Z": [
+    "Mesh_-X_Y_Z",
+    "Mesh_X_+Y_Z",
+    "Mesh_-X_+Y_-Z",
+    "Mesh_-X_+Y_+Z"
+  ],
+  "Mesh_-X_+Y_-Z": [
+    "Mesh_X_+Y_-Z",
+    "Mesh_-X_Y_-Z",
+    "Mesh_-X_+Y_Z"
+  ],
+  "Mesh_-X_+Y_+Z": [
+    "Mesh_X_+Y_+Z",
+    "Mesh_-X_Y_+Z",
+    "Mesh_-X_+Y_Z"
+  ],
+  "Mesh_+X_+Y_Z": [
+    "Mesh_+X_Y_Z",
+    "Mesh_X_+Y_Z",
+    "Mesh_+X_+Y_+Z",
+    "Mesh_+X_+Y_-Z"
+  ],
+  "Mesh_X_Y_+Z": [
+    "Mesh_X_+Y_+Z",
+    "Mesh_-X_Y_+Z",
+    "Mesh_+X_Y_+Z",
+    "Mesh_X_-Y_+Z"
+  ],
+  "Mesh_+X_Y_-Z": [
+    "Mesh_+X_Y_Z",
+    "Mesh_+X_+Y_-Z",
+    "Mesh_+X_-Y_-Z"
+  ],
+  "Mesh_+X_-Y_+Z": [
+    "Mesh_+X_Y_+Z",
+    "Mesh_X_-Y_+Z",
+    "Mesh_+X_-Y_Z"
+  ],
+  "Mesh_+X_Y_+Z": [
+    "Mesh_+X_Y_Z",
+    "Mesh_+X_+Y_+Z",
+    "Mesh_X_Y_+Z",
+    "Mesh_+X_-Y_+Z"
+  ],
+  "Mesh_-X_-Y_+Z": [
+    "Mesh_-X_Y_+Z",
+    "Mesh_X_-Y_+Z",
+    "Mesh_-X_-Y_Z"
+  ],
+  "Mesh_X_-Y_+Z": [
+    "Mesh_X_Y_+Z",
+    "Mesh_+X_-Y_+Z",
+    "Mesh_-X_-Y_+Z",
+    "Mesh_X_-Y_Z"
+  ],
+  "Mesh_X_-Y_Z": [
+    "Mesh_X_-Y_-Z",
+    "Mesh_X_-Y_+Z",
+    "Mesh_-X_-Y_Z",
+    "Mesh_+X_-Y_Z"
+  ],
+  "Mesh_-X_-Y_Z": [
+    "Mesh_-X_Y_Z",
+    "Mesh_-X_-Y_-Z",
+    "Mesh_-X_-Y_+Z",
+    "Mesh_X_-Y_Z"
+  ],
+  "Mesh_+X_-Y_-Z": [
+    "Mesh_X_-Y_-Z",
+    "Mesh_+X_Y_-Z",
+    "Mesh_+X_-Y_Z"
+  ],
+  "Mesh_+X_-Y_Z": [
+    "Mesh_+X_Y_Z",
+    "Mesh_+X_-Y_+Z",
+    "Mesh_X_-Y_Z",
+    "Mesh_+X_-Y_-Z"
+  ]
+}

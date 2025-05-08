@@ -1,0 +1,43 @@
+// Mobile-Optimized Cloud Shader
+// Simplified for performance on mobile GPUs
+
+shader MobileCloud(
+    // Core parameters only
+    point Position = P,
+    float Density = 0.8,
+    vector CloudMovement = vector(0.0, 0.0, 0.0),
+    float Time = 0.0,
+    
+    // Output
+    output closure color VolumeOutput = 0
+)
+{
+    // Simplified position calculation
+    point pos = Position + CloudMovement * Time * 0.1;
+    
+    // Use only first octave of noise (most efficient)
+    float cloud_shape = cellnoise(pos * 0.5);
+    
+    // Add very minimal detail with just one more noise sample
+    float detail = noise("perlin", pos * 1.5);
+    
+    // Simple mix with minimal calculations
+    float cloud_pattern = cloud_shape * (0.8 + 0.2 * detail);
+    
+    // Hard cutoff instead of smooth gradient
+    float cloud_density = step(0.4, cloud_pattern) * Density;
+    
+    // Aggressive distance culling
+    float distance_fade = max(0, 1.0 - distance(P, point(0,0,0)) * 0.02);
+    cloud_density *= distance_fade;
+    
+    // Skip all calculation if density too low
+    if (cloud_density < 0.05)
+        return;
+    
+    // Very simple constant scatter with no anisotropy calculation
+    VolumeOutput = cloud_density * (
+        henyey_greenstein(0.0) * 0.9 + 
+        absorption() * 0.1
+    );
+}
