@@ -22,16 +22,13 @@ def export():
         
         obj.select_set(True)
         
-        
         # Recursively select all children
         def select_children_recursive(parent_obj):
             for child in parent_obj.children:
                 child.select_set(True)
                 select_children_recursive(child)
-        
-        # Call the recursive function to select all children
+
         select_children_recursive(obj)
-        
         
         file_path = os.path.join(export_path, f"{obj.name}.fbx")
         
@@ -39,7 +36,7 @@ def export():
             bpy.ops.export_scene.fbx(
                 filepath=file_path, 
                 use_selection=True, 
-                export_smoothing_groups=True,
+                mesh_smooth_type ='OFF',
                 batch_mode='OFF')
         except Exception as e:
             print(e)
